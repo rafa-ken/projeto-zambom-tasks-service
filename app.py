@@ -9,10 +9,14 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Pega o valor do .env
+# Pega o valor do .env ou usa padrão (útil para testes)
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
-mongo = PyMongo(app)
 
+# Inicializa o PyMongo
+mongo = PyMongo()
+mongo.init_app(app)
+
+# ---------------- ROTAS ---------------- #
 
 # GET - Listar tarefas
 @app.route("/tarefas", methods=["GET"])
@@ -77,6 +81,8 @@ def deletar_tarefa(id):
     if resultado.deleted_count == 0:
         return jsonify({"erro": "Tarefa não encontrada"}), 404
     return jsonify({"mensagem": "Tarefa deletada com sucesso"}), 200
+
+# --------------------------------------- #
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

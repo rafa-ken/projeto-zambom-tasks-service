@@ -1,17 +1,19 @@
 import pytest
+import mongomock
 from app import app, mongo
-from bson.objectid import ObjectId
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
     app.config["TESTING"] = True
-    app.config["MONGO_URI"] = "mongodb://localhost:27017/tarefas_testdb"
-    with app.app_context():
-        mongo.db.tarefas.delete_many({})  # limpa antes dos testes
+    
+    # Força mongo.db a usar mongomock (banco em memória)
+    mongo.cx = mongomock.MongoClient()
+    mongo.db = mongo.cx["tarefas_testdb"]
+
     client = app.test_client()
     yield client
-    with app.app_context():
-        mongo.db.tarefas.delete_many({})  # limpa depois dos testes
+    # limpa depois dos testes
+    mongo.db.tarefas.delete_many({})
 
 def test_criar_tarefa(client):
     resposta = client.post(
