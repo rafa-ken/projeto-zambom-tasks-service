@@ -19,7 +19,7 @@ mongo.init_app(app)
 # ---------------- ROTAS ---------------- #
 
 # GET - Listar tarefas
-@app.route("/tarefas", methods=["GET"])
+@app.route("/tasks", methods=["GET"])
 def listar_tarefas():
     tarefas = mongo.db.tarefas.find()
     saida = []
@@ -33,7 +33,7 @@ def listar_tarefas():
     return jsonify(saida)
 
 # POST - Criar tarefa
-@app.route("/tarefas", methods=["POST"])
+@app.route("/tasks", methods=["POST"])
 def criar_tarefa():
     dados = request.json
     if not dados or "titulo" not in dados or "descricao" not in dados:
@@ -53,7 +53,7 @@ def criar_tarefa():
     }), 201
 
 # PUT - Atualizar tarefa
-@app.route("/tarefas/<id>", methods=["PUT"])
+@app.route("/tasks/<id>", methods=["PUT"])
 def atualizar_tarefa(id):
     dados = request.json
     atualizada = mongo.db.tarefas.find_one_and_update(
@@ -75,7 +75,7 @@ def atualizar_tarefa(id):
     })
 
 # DELETE - Remover tarefa
-@app.route("/tarefas/<id>", methods=["DELETE"])
+@app.route("/tasks/<id>", methods=["DELETE"])
 def deletar_tarefa(id):
     resultado = mongo.db.tarefas.delete_one({"_id": ObjectId(id)})
     if resultado.deleted_count == 0:
