@@ -51,7 +51,7 @@ jobs:
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/tasks-service:latest
           docker stop tasks-service || true
           docker rm tasks-service || true
-          docker run -d -p 8080:5000 \
+          docker run -d -p 8083:5003 \
             -e MONGO_URI=${{ secrets.MONGO_URI }} \
             --name tasks-service \
             ${{ secrets.DOCKERHUB_USERNAME }}/tasks-service:latest
