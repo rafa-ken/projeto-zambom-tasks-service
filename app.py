@@ -10,16 +10,15 @@ load_dotenv()
 app = Flask(__name__)
 
 # Pega o valor do .env ou usa padrão (útil para testes)
-app.config["MONGO_URI"] = os.getenv("MONGO_URI")
+app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://localhost:27017/testdb")
 
 # Inicializa o PyMongo
-mongo = PyMongo()
-mongo.init_app(app)
+mongo = PyMongo(app)
 
 # ---------------- ROTAS ---------------- #
 
 # GET - Listar tarefas
-@app.route("/tasks", methods=["GET"])
+@app.route("/tarefas", methods=["GET"])
 def listar_tarefas():
     tarefas = mongo.db.tarefas.find()
     saida = []
@@ -30,10 +29,10 @@ def listar_tarefas():
             "descricao": tarefa["descricao"],
             "concluida": tarefa.get("concluida", False)
         })
-    return jsonify(saida)
+    return jsonify(saida), 200
 
 # POST - Criar tarefa
-@app.route("/tasks", methods=["POST"])
+@app.route("/tarefas", methods=["POST"])
 def criar_tarefa():
     dados = request.json
     if not dados or "titulo" not in dados or "descricao" not in dados:
@@ -53,7 +52,7 @@ def criar_tarefa():
     }), 201
 
 # PUT - Atualizar tarefa
-@app.route("/tasks/<id>", methods=["PUT"])
+@app.route("/tarefas/<id>", methods=["PUT"])
 def atualizar_tarefa(id):
     dados = request.json
     atualizada = mongo.db.tarefas.find_one_and_update(
@@ -72,10 +71,10 @@ def atualizar_tarefa(id):
         "titulo": atualizada["titulo"],
         "descricao": atualizada["descricao"],
         "concluida": atualizada.get("concluida", False)
-    })
+    }), 200
 
 # DELETE - Remover tarefa
-@app.route("/tasks/<id>", methods=["DELETE"])
+@app.route("/tarefas/<id>", methods=["DELETE"])
 def deletar_tarefa(id):
     resultado = mongo.db.tarefas.delete_one({"_id": ObjectId(id)})
     if resultado.deleted_count == 0:
