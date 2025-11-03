@@ -31,5 +31,3 @@ docker run -p 5001:5000 your-dockerhub-username/tasks-service
 ```bash
 pytest -v
 ```
-
-oi2
