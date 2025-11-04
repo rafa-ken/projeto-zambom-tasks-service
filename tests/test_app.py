@@ -2,33 +2,17 @@ import pytest
 import mongomock
 import sys
 import os
-from unittest.mock import patch, MagicMock
-from flask import request
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import app, mongo
 
 @pytest.fixture
-def client(monkeypatch):
+def client():
     app.config["TESTING"] = True
     
     # Força mongo.db a usar mongomock (banco em memória)
     mongo.cx = mongomock.MongoClient()
     mongo.db = mongo.cx["tarefas_testdb"]
-
-    # Mock Auth0 validation - bypass authentication in tests
-    def mock_requires_auth(required_scope=None):
-        def decorator(f):
-            def wrapper(*args, **kwargs):
-                # Simula um usuário autenticado
-                request.current_user = {"sub": "test-user"}
-                return f(*args, **kwargs)
-            wrapper.__name__ = f.__name__
-            return wrapper
-        return decorator
-    
-    # Patch the decorator in app module
-    monkeypatch.setattr("app.requires_auth_api", mock_requires_auth)
 
     client = app.test_client()
     yield client

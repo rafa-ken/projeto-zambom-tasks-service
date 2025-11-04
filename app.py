@@ -70,10 +70,16 @@ def requires_auth_api(required_scope: str = None):
     """
     Decorator to require a Bearer access token (Auth0).
     If required_scope is provided, also checks that scope exists in token.
+    Bypasses authentication when app.config['TESTING'] is True.
     """
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
+            # Bypass authentication in test mode
+            if app.config.get("TESTING"):
+                request.current_user = {"sub": "test-user"}
+                return f(*args, **kwargs)
+            
             auth = request.headers.get("Authorization", None)
             if not auth:
                 return jsonify({"error": "Authorization header missing"}), 401
