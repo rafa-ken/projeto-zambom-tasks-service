@@ -34,8 +34,13 @@ if FRONTEND_ORIGINS.strip() == "*":
 else:
     cors_origins = [o.strip() for o in FRONTEND_ORIGINS.split(",") if o.strip()]
 
-# Initialize CORS (basic)
-CORS(app, origins=cors_origins, supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
+# Initialize CORS with full configuration
+CORS(app, 
+     resources={r"/*": {"origins": cors_origins}},
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization", "Accept"],
+     expose_headers=["Content-Type"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # -------------------------
 # Auth0 / JWKS config
@@ -150,27 +155,8 @@ mongo = PyMongo(app)
 
 
 # -------------------------
-# CORS preflight handler + global CORS headers
+# Logging
 # -------------------------
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        origin = request.headers.get("Origin")
-        allowed_origin = None
-        if cors_origins == "*" or (origin and origin in cors_origins):
-            allowed_origin = origin if origin else "*"
-
-        resp = make_response("", 204)
-        if allowed_origin:
-            resp.headers["Access-Control-Allow-Origin"] = allowed_origin
-            resp.headers["Vary"] = "Origin"
-            resp.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
-            resp.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type,Accept"
-            resp.headers["Access-Control-Allow-Credentials"] = "true"
-            resp.headers["Access-Control-Max-Age"] = "3600"
-        return resp
-
-
 @app.before_request
 def log_request_info():
     logger.debug("Incoming request: %s %s", request.method, request.path)
@@ -181,20 +167,6 @@ def log_request_info():
         logger.debug("Body preview: %s", request.get_data(as_text=True)[:1000])
     except Exception:
         pass
-
-
-@app.after_request
-def after_request(response):
-    origin = request.headers.get("Origin")
-    if origin:
-        if cors_origins == "*" or origin in cors_origins:
-            response.headers["Access-Control-Allow-Origin"] = origin if cors_origins != "*" else "*"
-            response.headers["Vary"] = "Origin"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization,Accept"
-            response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Max-Age"] = "3600"
-    return response
 
 
 # -------------------------
