@@ -272,6 +272,33 @@ def listar_tarefas():
     return jsonify(out), 200
 
 
+@app.route("/tarefas/<id>", methods=["GET"])
+@requires_auth_api()
+def obter_tarefa(id):
+    """
+    Busca uma tarefa individual por ID.
+    Usado pelo Reports service para validar task_ids.
+    """
+    try:
+        obj_id = ObjectId(id)
+    except Exception:
+        return jsonify({"error": "ID inválido"}), 400
+    
+    tarefa = mongo.db.tarefas.find_one({"_id": obj_id})
+    if not tarefa:
+        return jsonify({"error": "Tarefa não encontrada"}), 404
+    
+    return jsonify({
+        "id": str(tarefa["_id"]),
+        "titulo": tarefa.get("titulo"),
+        "descricao": tarefa.get("descricao"),
+        "concluida": tarefa.get("concluida", False),
+        "owner": tarefa.get("owner"),
+        "criado_em": tarefa.get("criado_em"),
+        "atualizado_em": tarefa.get("atualizado_em")
+    }), 200
+
+
 @app.route("/tarefas", methods=["POST"])
 @requires_auth_api()  # TEMPORÁRIO: scope removido para testes
 def criar_tarefa():
